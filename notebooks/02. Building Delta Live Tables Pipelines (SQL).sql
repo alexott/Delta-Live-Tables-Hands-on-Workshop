@@ -14,7 +14,7 @@ TBLPROPERTIES ("quality" = "bronze")
 AS (
       SELECT
       *,
-      input_file_name() AS inputFileName
+      _metadata.file_path AS inputFileName
       FROM cloud_files( '${data_source_path}', 'csv', 
             map("schema", "InvoiceNo STRING, StockCode STRING, Description STRING, Quantity FLOAT, InvoiceDate STRING, UnitPrice FLOAT, CustomerID STRING, Country STRING",  
             "header", "true"))
@@ -97,9 +97,7 @@ TBLPROPERTIES
 
 CREATE STREAMING LIVE TABLE quarantined_retail
 (
-  CONSTRAINT has_customer EXPECT (CustomerID IS NULL) ON VIOLATION DROP ROW,
-  CONSTRAINT has_invoice EXPECT (InvoiceNo IS NULL) ON VIOLATION DROP ROW,
-  CONSTRAINT valid_date_time EXPECT (InvoiceDate IS NULL) ON VIOLATION DROP ROW
+  CONSTRAINT bad_date EXPECT (CustomerID IS NULL or InvoiceNo IS NULL or InvoiceDate IS NULL) ON VIOLATION DROP ROW
 )
 TBLPROPERTIES 
 ("quality"="bronze",
